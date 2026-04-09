@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Luyện Thi N3 - 35 Câu Tổng Hợp</title>
+    <style>
+        :root { --n3: #2c3e50; --gold: #f39c12; --success: #27ae60; --error: #e74c3c; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .app-card { width: 100%; max-width: 550px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .progress-bar { height: 8px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--gold); width: 0%; transition: 0.3s; }
+        .q-header { color: #888; font-size: 13px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .q-text { font-size: 20px; font-weight: bold; color: #333; margin-bottom: 25px; line-height: 1.5; }
+        .options { display: grid; gap: 12px; }
+        .btn-opt { padding: 16px; border: 2px solid #f0f0f0; border-radius: 12px; background: white; cursor: pointer; font-size: 16px; text-align: left; transition: 0.2s; }
+        .btn-opt:hover { border-color: var(--gold); background: #fffdf0; }
+        .btn-opt.correct { background: #d4edda; border-color: var(--success); color: #155724; }
+        .btn-opt.wrong { background: #f8d7da; border-color: var(--error); color: #721c24; }
+        #next-btn { width: 100%; margin-top: 25px; padding: 18px; background: var(--n3); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; display: none; font-size: 16px; }
+        #score-screen { text-align: center; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="app-card" id="quiz-screen">
+    <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
+    <div class="q-header">
+        <span id="level-tag">JLPT N3 MOJI-GOI</span>
+        <span id="count-tag"></span>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options-box"></div>
+    <button id="next-btn" onclick="nextQuestion()">CÂU TIẾP THEO →</button>
+</div>
+
+<div class="app-card score-screen" id="score-screen">
+    <h1 style="font-size: 50px;">🎉</h1>
+    <h2>Hoàn thành 35 câu N3!</h2>
+    <div style="font-size: 45px; font-weight: bold; color: var(--success);" id="final-score"></div>
+    <p id="comment"></p>
+    <button onclick="location.reload()" style="padding:15px 30px; border-radius:50px; border:none; background:var(--n3); color:white; font-weight:bold; cursor:pointer;">LÀM LẠI TỪ ĐẦU</button>
+</div>
+
+<script>
+// DỮ LIỆU 35 CÂU BẠN GỬI
+const questions = [
+    {q: "地球の温暖化 (地球)", a: ["じきゅ", "じきゅう", "ちきゅ", "ちきゅう"], c: 3},
+    {q: "説明書のこの (部分)", a: ["ぶうぶん", "ぶうふん", "ぶぶん", "ぶふん"], c: 2},
+    {q: "料理教室で (包丁)", a: ["ほうちょ", "ぼうcho", "ぼうちょう", "ほうちょう"], c: 3},
+    {q: "授業で、調べた内容を (発表) する", a: ["はっひょう", "はっぴょう", "はっひょ", "はっぴょ"], c: 1},
+    {q: "説明を聞いてもまだ (疑問) が残っている", a: ["くもん", "ぐもん", "ぎもん", "きもん"], c: 2},
+    {q: "彼はボールを強く (打って)", a: ["きって", "おって", "わって", "うって"], c: 3},
+    {q: "地図アプリで駅の (方向) を確認した", a: ["ほうほう", "ほうぼう", "ほうこう", "ほうごう"], c: 2},
+    {q: "海に沈む (夕日) を見て、感動した", a: ["ゆび", "ゆうhi", "ゆうび", "ゆhi"], c: 1},
+    {q: "この建物は (あんぜん) だと判断された", a: ["安全", "案全", "安然", "案然"], c: 0},
+    {q: "電車が (おくれて) 到着した", a: ["送れて", "後れて", "遅れて", "押くれて"], c: 2},
+    {q: "工事の (えいきょう) で道が混んでいる", a: ["永久", "影響", "映供", "英協"], c: 1},
+    {q: "先生に (そうだん) した", a: ["相談", "想談", "双段", "相断"], c: 0},
+    {q: "サービスの (しつ) を上げようとしている", a: ["室", "失", "実", "質"], c: 3},
+    {q: "困っている人を (たすけて) あげたい", a: ["たおれて", "こわれて", "よごれて", "たすけて"], c: 3},
+    {q: "会議の ( ) が変わったので、メールします", a: ["ルール", "スケジュール", "マナー", "プラン"], c: 1},
+    {q: "彼は冗談を言っているだけで、( ) ではない", a: ["本気", "本物", "事実", "正直"], c: 0},
+    {q: "ベランダに干す ( ) がない", a: ["隙間", "空き", "広さ", "スペース"], c: 3},
+    {q: "母に ( ) がっかりされた", a: ["うっかり", "すっかり", "ぴったり", "しっかり"], c: 1},
+    {q: "階段を上るとすぐに ( ) が切れてしまう", a: ["息", "胸", "気", "身"], c: 0},
+    {q: "机の中に ( ) おいてください", a: ["隠れて", "しまって", "閉じて", "貯めて"], c: 1},
+    {q: "佐藤さんはお金に ( ) 人で...", a: ["険しい", "激しい", "詳しい", "細かい"], c: 3},
+    {q: "ゴミの ( ) に協力してください", a: ["分類", "分別", "区別", "分解"], c: 1},
+    {q: "留学するための費用を ( )", a: ["稼いだ", "儲けた", "奪った", "支払った"], c: 0},
+    {q: "時間があると思っていたら、( ) 出発の時間だ", a: ["そろそろ", "いよいよ", "とうとう", "ますます"], c: 2},
+    {q: "飛び上がって ( ) いた", a: ["喜んで", "楽しんで", "好んで", "遊んで"], c: 0},
+    {q: "性格が (そっくり) だ", a: ["反対だ", "よく似ている", "全然違う", "明るい"], c: 1},
+    {q: "留学するかどうか、まだ (ためらって) います", a: ["迷って", "決めて", "急いで", "困って"], c: 0},
+    {q: "初心者には (レベル) が高すぎる", a: ["値段", "評判", "程度", "価値"], c: 2},
+    {q: "山田さんはとても (温厚な) 人だ", a: ["頭がいい", "厳しい", "冷たい", "優しい"], c: 3},
+    {q: "旅行の準備が (完了) した", a: ["終わった", "始まった", "失敗した", "遅れた"], c: 0},
+    {q: "正しい使い方：延期", a: ["パスポートの期限", "来週に延期された", "30分延期", "2日延期したい"], c: 1},
+    {q: "正しい使い方：おごる", a: ["部長におごってもらった", "父におごってもらった", "おごってあげた", "ノートをおごった"], c: 0},
+    {q: "正しい使い方：温厚", a: ["温厚な性格", "今日の天気は温厚", "温度を温厚に", "温厚な声"], c: 0},
+    {q: "正しい使い方：スペース", a: ["書類のスペース", "休むスペース", "乗せるスペースがない", "宇宙のスペース"], c: 2},
+    {q: "正しい使い方：解消", a: ["熱が解消", "契約を解消", "パソコンを解消", "誤解が解消"], c: 3}
+];
+
+let idx = 0, score = 0, answered = false;
+
+function load() {
+    answered = false;
+    let q = questions[idx];
+    document.getElementById('fill').style.width = (idx / questions.length * 100) + "%";
+    document.getElementById('count-tag').innerText = `Câu ${idx + 1}/${questions.length}`;
+    document.getElementById('q-text').innerText = q.q;
+    document.getElementById('next-btn').style.display = 'none';
+    
+    let html = "";
+    q.a.forEach((opt, i) => {
+        html += `<button class="btn-opt" onclick="check(${i}, this)">${opt}</button>`;
+    });
+    document.getElementById('options-box').innerHTML = html;
+}
+
+window.check = (i, btn) => {
+    if(answered) return;
+    answered = true;
+    let correctIdx = questions[idx].c;
+    let allBtns = document.getElementsByClassName('btn-opt');
+    
+    if(i === correctIdx) {
+        btn.classList.add('correct');
+        score++;
+    } else {
+        btn.classList.add('wrong');
+        allBtns[correctIdx].classList.add('correct');
+    }
+    document.getElementById('next-btn').style.display = 'block';
+}
+
+window.nextQuestion = () => {
+    idx++;
+    if(idx < questions.length) load();
+    else {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('score-screen').style.display = 'block';
+        document.getElementById('final-score').innerText = `${score}/${questions.length}`;
+        document.getElementById('comment').innerText = score > 25 ? "Tuyệt vời! N3 nằm trong tầm tay bạn!" : "Cố gắng luyện tập thêm nhé!";
+    }
+}
+
+load();
+</script>
+</body>
+</html>
